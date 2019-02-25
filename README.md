@@ -126,7 +126,7 @@ We need to specify the commands we need to execute before the commit is really e
  
 At this step, if we want to execute a commit, it will complain because of our _index.css_ file. This is because we are importing it without declaring a variable and TypeScript is not smart enough to know that it's used. To avoid this and be able to do a commit, we will need to run it with the _--no-verify_ option.
 
-## Storybook  
+# Storybook  
 [Storybook](https://storybook.js.org/) is a UI development environment and playground for UI components. The tool enables users to create components independently and showcase components interactively in an isolated development environment.
 
 Run `npm install --save-dev --save-exact @storybook/react @types/storybook__react` in your terminal in order to install it.
@@ -142,7 +142,7 @@ Then add the following scripts in your package.json:
   }
 ```
    
-### Setting up TypeScript to work with Storybook  
+## Setting up TypeScript to work with Storybook  
 Run `npm install --save-dev --save-exact react-docgen-typescript-loader awesome-typescript-loader` in your terminal in order to install all the required dependencies.
   
 We will need to create a new configuration directory only for storybook. Go to the root of the project and create a new directory called .storybook. Add a new file called webpack.config.js and add the following content:  
@@ -166,7 +166,7 @@ We will need to create a new configuration directory only for storybook. Go to t
   };
 ```
   
-### Add main plugins
+## Add main plugins
 Instead of plugins, the extra features for Storybooks are called Addons.
   
 There are a lot of [addons](https://storybook.js.org/addons/addon-gallery/) for Storybook.
@@ -190,7 +190,7 @@ Even though we have already installed the dependencies, we need to create a file
   import 'storybook-addon-jsx/register';
 ```
   
-### Load all the stories
+## Load all the stories
 Create a new file called config.js with the following content:
 ```
 import { configure, addDecorator, setAddon } from "@storybook/react";
@@ -220,7 +220,7 @@ addDecorator(
 configure(loadStories, module);
 ```
 
-### Create first story
+## Create first story
 In order to check that everything went fine, we will create our first story. Create a new file inside src/components/test.story.tsx with the following content:
 ```
 import { number } from "@storybook/addon-knobs";
@@ -260,7 +260,7 @@ If we run now `npm run storybook`, a new tab will be opened in our browser with 
 
 
 
-## Project structure
+# Project structure
 
 ```
 .
