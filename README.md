@@ -1248,3 +1248,8 @@ O'Reilly: http://shop.oreilly.com/product/0636920137269.do
 
 ## Bibliography
 https://onlineornot.com/blog/apollo-vs-relay-which-graphql-client-to-use-2019
+
+## TODO:
+- [ ] Add other resources
+- [ ] Add a bibliography
+
