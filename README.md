@@ -1240,6 +1240,8 @@ export class App extends Component {
 }
 ```
 
+To check how code splitting is used in the app, we can do this by going to the main route and try later to go the create or the detail page. If we inspect the network tab, we will see that a second bundle will be loaded.
+
 ## Other resources
 GraphQL integration: https://www.onegraph.com/
 O'Reilly: http://shop.oreilly.com/product/0636920137269.do
