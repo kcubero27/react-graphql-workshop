@@ -688,10 +688,96 @@ export class App extends Component {
 
 As we are in development mode, we will see a popup with the stacktrace of the error. Once the application uses the prod mode, this message won´t be shown.
 
-## Material UI
-[MaterialUI](https://material-ui.com/)
+# Material UI
+[Material UI](https://material-ui.com/) is one of the most popular React UI framework.
 
-Route:
+## Installation 
+We can install only the core components, however, we will add as well some icons: `npm install --save --save-exact @material-ui/core @material-ui/icons`.
+
+Material UI uses Roboto Font therefore, we need somehow import it. The fatest way is going to public/index.html and add the following link:
+```
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+```
+
+## Create post component
+Go to components folder and create a new component called post.
+
+The post.component.tsx file will be:
+```
+import React, { Component } from "react";
+import { Link } from "react-router-dom";
+import { Props } from "./post.type";
+import Card from "@material-ui/core/Card";
+import CardActionArea from "@material-ui/core/CardActionArea";
+import CardActions from "@material-ui/core/CardActions";
+import CardContent from "@material-ui/core/CardContent";
+import Button from "@material-ui/core/Button";
+import CardMedia from "@material-ui/core/CardMedia";
+import Typography from "@material-ui/core/Typography";
+
+export class Post extends Component<Props> {
+  render() {
+    const { post } = this.props;
+
+    return (
+      <Card>
+        <CardActionArea>
+          <CardMedia src={post.imageUrl} component="img" />
+          <CardContent>
+            <Typography gutterBottom variant="h5" component="h2">
+              {post.title}
+            </Typography>
+            <Typography component="p">
+              {post.description.slice(0, 100)}...
+            </Typography>
+          </CardContent>
+        </CardActionArea>
+        <CardActions>
+          <Button size="small" color="primary">
+            <Link
+              className="bg-white ma3 box post flex flex-column no-underline br2"
+              to={`/post/${this.props.post.id}`}
+            >
+              Learn More
+            </Link>
+          </Button>
+        </CardActions>
+      </Card>
+    );
+  }
+}
+```
+
+The post.story.tsx content:
+```
+import { text } from "@storybook/addon-knobs";
+import { storiesOf } from "@storybook/react";
+import React from "react";
+import { MemoryRouter } from "react-router-dom";
+import { Post } from "./post.component";
+
+storiesOf("Post", module)
+    .addDecorator(story => <MemoryRouter initialEntries={["/"]}>{story()}</MemoryRouter>)
+    .addWithJSX("Paris", () => {
+        const id = text("Id", "1234ASD");
+        const title = text("Title", "Lorem ipsum.");
+        const description = text(
+            "Description",
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nesciunt, nostrum."
+        );
+        const imageUrl = text(
+            "Image URL",
+            "https://media.giphy.com/media/cfuL5gqFDreXxkWQ4o/giphy-downsized-large.gif"
+        );
+
+        return <Post post={{ id, title, description, imageUrl }} />;
+    });
+```
+
+
+
+
+## Lazy Loading
 
 React.lazy() and Suspense
 https://reactjs.org/docs/code-splitting.html
