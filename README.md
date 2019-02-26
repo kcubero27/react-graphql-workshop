@@ -1199,11 +1199,46 @@ There is a problem related to Apollo cache. readQuery crashes if there is nothin
 
 
 
-# Lazy Loading
+# Code Splitting
+[Code-Splitting](React.lazy) is a feature supported by bundlers like Webpack and Browserify (via factor-bundle) which can create multiple bundles that can be dynamically loaded at runtime.
 
-React.lazy() and Suspense
-https://reactjs.org/docs/code-splitting.html
+The React.lazy function lets you render a dynamic import as a regular component.
 
+By default, React.lazy doesn't support named imports. You can see more in this [discussion](https://github.com/reactjs/rfcs/pull/64). Therefore, we can use the `export default` in our components or do this once we try to import the component like this:
+```
+const DetailPageLazy = lazy(() => import("../../views/detail-page").then(module => ({ default: module.DetailPage })));
+```
+
+If the module containing the OtherComponent is not yet loaded by the time MyComponent renders, we must show some fallback content while we’re waiting for it to load - such as a loading indicator. This is done using the Suspense component:
+```
+export class App extends Component {
+    render() {
+        return (
+            <BrowserRouter>
+                <ErrorBoundary>
+                    <ApolloProvider client={apolloClient}>
+                        <Grid container justify="center" alignItems="center" direction="column">
+                            <Suspense fallback={<div>Loading...</div>}>
+                                <Switch>
+                                    <Route exact path="/">
+                                        <ListPage />
+                                    </Route>
+                                    <Route path="/create">
+                                        <CreatePageLazy />
+                                    </Route>
+                                    <Route path="/post/:id">
+                                        <DetailPageLazy />
+                                    </Route>
+                                </Switch>
+                            </Suspense>
+                        </Grid>
+                    </ApolloProvider>
+                </ErrorBoundary>
+            </BrowserRouter>
+        );
+    }
+}
+```
 
 ## Other resources
 GraphQL integration: https://www.onegraph.com/
