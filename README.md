@@ -9,6 +9,9 @@ ReactJS basically is an open-source JavaScript library which is used for buildin
 Initialise a new project with [create-react-app](https://github.com/facebook/create-react-app). In this way, you won't need any additional configuration to start a ReactJS project.
 
 Run `npx create-react-app my-app --typescript` in your terminal and change _my-app_ for the name of your new directory.
+
+### Why ReactJS is not a framework
+The main big difference between those are that Angular is a framework while ReactJS is a library. Basically, if we create a new project with Angular, we will already have all the basic things such as the router, http... However, if we do it with ReactJS, we will need to install other libraries or implement our own things. For example, in case we need a router, we will have to install one (the most common one is react-router). Same happens for the http.
   
 ### React developer tools
 [React Developer Tools](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=es) is a Chrome extension that allows you to debug your application.
@@ -254,13 +257,8 @@ storiesOf("Test 2", module).addWithJSX("Paris", () => <div color="#333">test</di
 
 If we run now `npm run storybook`, a new tab will be opened in our browser with the URL _http://localhost:6006/_. 
 
-
-
-
-
-
-
 # Project structure
+There is no style guide for ReactJS.
 
 ```
 .
@@ -304,23 +302,62 @@ If we run now `npm run storybook`, a new tab will be opened in our browser with 
 └── tslint.json
 ```
 
-### Components
-Simple components.
-// TODO: add definition
+## Components
+There are different ways of creating components. The most used one is called stateless and statefull components.
 
-### Domains
-Inside this repository, we store all the types as well as all the queries.
-// TODO: add definition
+Functional Component or Stateless component:
+- Functional component is like pure function in JavaScript.
+- Functional component is also called as a stateless component.
+- The functional component only receives props from parent component and return you JSX elements.
+- The functional component doesn’t play with any lifecycle methods of React and doesn’t play with the component state.
 
-### HOCs
+Class component or statefull component:
+- React class component is called as a stateful component.
+- Stateful component plays with all life cycle methods of React.
+- This component will modify state.
+
+## Domains
+This folder contains all the things related to a single entity. For example, we will see here interfaces, queries, mutations, services from an entity...
+
+## HOCs
 Components that enhance other components. In this workshop, we will place all the Query and Mutation components in this folder.
-// TODO: add definition
 
-### Views
+```
+function withSubscription(WrappedComponent, selectData) {
+  return class extends React.Component {
+    constructor(props) {
+      super(props);
+      this.handleChange = this.handleChange.bind(this);
+      this.state = {
+        data: selectData(DataSource, props)
+      };
+    }
+
+    componentDidMount() {
+      DataSource.addChangeListener(this.handleChange);
+    }
+
+    componentWillUnmount() {
+      DataSource.removeChangeListener(this.handleChange);
+    }
+
+    handleChange() {
+      this.setState({
+        data: selectData(DataSource, this.props)
+      });
+    }
+
+    render() {
+      return <WrappedComponent data={this.state.data} {...this.props} />;
+    }
+  };
+}
+```
+
+## Views
 Each of the components that are the main ones in a route. 
-// TODO: add definition
 
-## GraphQL
+# GraphQL
 GraphQL is a syntax that describes how to ask for data, and is generally used to load data from a server to a client. GraphQL has three main characteristics:
 - It lets the client specify exactly what data it needs.
 - It makes it easier to aggregate data from multiple sources.
@@ -340,7 +377,6 @@ Queries let the user to retrieve data (an equivalent of a GET in REST). However,
 
 #### Fields
 Each of the things we request is called a field. A field can even have a sub-selection of fields like friends.
-
 ```
 {
   hero {
@@ -391,10 +427,28 @@ They let you rename the result of a field to anything you want:
 ```
 
 #### Fragments
-https://graphql.org/learn/queries/
+They allow us to repeat the same part of a query, mutation or subscription in multiple ones.
+```
+{
+  leftComparison: hero(episode: EMPIRE) {
+    ...comparisonFields
+  }
+  rightComparison: hero(episode: JEDI) {
+    ...comparisonFields
+  }
+}
+
+fragment comparisonFields on Character {
+  name
+  appearsIn
+  friends {
+    name
+  }
+}
+```
 
 ### Subscription
-
+They are a way to push data from the server to the clients that choose to listen to real time messages from the server. A common use case for subscriptions is notifying the client side about particular events, for example the creation of a new object, updated fields and so on.
 
 // TODO: show different ways of adding the query: HOC or Component
 
