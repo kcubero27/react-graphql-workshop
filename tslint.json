@@ -12,6 +12,7 @@
         "member-access": [false],
         "no-use-before-declare": false,
         "no-submodule-imports": false,
-        "no-console": false
+        "no-console": false,
+        "no-object-literal-type-assertion": false
     }
 }
