@@ -363,19 +363,17 @@ GraphQL is a syntax that describes how to ask for data, and is generally used to
 - It makes it easier to aggregate data from multiple sources.
 - It uses a type system to describe data.
 
-### What makes different GraphQL from REST
+## What makes different GraphQL from REST
 - In REST, the endpoint you call is the identity of that object. In GraphQL, the identity is separate from how you fetch it.
 - In REST, the shape and size of the resource is determined by the server. In GraphQL, the server declares what resources are available, and the client asks for what it needs at the time.
 - In GraphQL, you can traverse from the entry point to related data, following relationships defined in the schema, in a single request. In REST, you have to call multiple endpoints to fetch related resources.
 
-![graphql workflow](https://cdn-images-1.medium.com/max/3568/1*_fQh0zWBlDG1OJ-FbMnWcw.png)
-
 See more: https://blog.apollographql.com/graphql-vs-rest-5d425123e34b
 
-### Queries and mutations
+## Queries and mutations
 Queries let the user to retrieve data (an equivalent of a GET in REST). However, Mutations let the user to update, delete or create a new entity (equivalent of DELETE, POST and PUT in REST).
 
-#### Fields
+### Fields
 Each of the things we request is called a field. A field can even have a sub-selection of fields like friends.
 ```
 {
@@ -389,7 +387,7 @@ Each of the things we request is called a field. A field can even have a sub-sel
 }
 ```
 
-#### Arguments
+### Arguments
 Every field and nested object can get its own set of arguments:
 ```
 {
@@ -400,7 +398,7 @@ Every field and nested object can get its own set of arguments:
 }
 ```
 
-#### Aliases
+### Aliases
 They let you rename the result of a field to anything you want:
 ```
 // Query
@@ -426,7 +424,7 @@ They let you rename the result of a field to anything you want:
 }
 ```
 
-#### Fragments
+### Fragments
 They allow us to repeat the same part of a query, mutation or subscription in multiple ones.
 ```
 {
@@ -447,23 +445,35 @@ fragment comparisonFields on Character {
 }
 ```
 
-### Subscription
+## Subscription
 They are a way to push data from the server to the clients that choose to listen to real time messages from the server. A common use case for subscriptions is notifying the client side about particular events, for example the creation of a new object, updated fields and so on.
 
-// TODO: show different ways of adding the query: HOC or Component
+# Graphcool
+[Graphcool](https://www.graph.cool/) is an open-source backend development framework to develop and deploy production-ready GraphQL microservices.
 
+There are more tools similar to Graphcool like [Prisma](https://www.prisma.io/).
 
-## Start to create a server using GraphQL
-// TODO: What is GraphCool. There are other tools like Prisma
+## Create a server
+_For the following steps, you will need to have an account in Graphcool._ 
 
-`npm install -g graphcool`
+Graphcool has included a CLI tool to build apps faster. We can install it globally or use it through npx: `npm install -g graphcool`.
 
-# Create a local service definition in a new directory called `server`
-graphcool init graphcool-post-server
+### Create a local service definition
+Run `graphcool init my-app` or using the short form `gfc init my-app` where _my-app_ is the name of the new application. It will create a new directory with the name _my-app_.
 
-cd graphcool-post-server
+The project will look like:
+```
+.
+├── graphcool.yml
+├── package.json
+├── src
+│   ├── hello.graphql
+│   └── hello.js
+└── types.graphql
+```
 
-We edit the types.graphql
+### Create a new entity Post
+Go inside the project and edit types.graphql with the following content:
 ```
 type User @model {
   id: ID! @isUnique
@@ -488,13 +498,14 @@ type Post @model {
  }
 ```
 
-Let's deploy our app using `graphcool deploy`.
+### Deploy the app
+Graphcool already has a command to deploy the current application in live.
+Just use `graphcool deploy` inside the project.
 
-
-## GraphQL Clients
+# GraphQL Clients
 There are two main clients in the market: [Apollo](https://www.apollographql.com/docs/react/) and [Relay](https://facebook.github.io/relay/docs/en/introduction-to-relay.html).
 
-### Do we even need a client?
+## Do we even need a client?
 If you are using a simple application, you can just use fetch in your components like so:
 ```
 fetch('/graphql', {
@@ -509,7 +520,7 @@ fetch('/graphql', {
   .then(data => console.log('data returned:', data));
 ```
 
-### Apollo Client Developer Tools
+## Apollo Client Developer Tools
 https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm
 
 1. A built-in GraphiQL console that allows you to make queries against your GraphQL server using your app's network interface directly (no configuration necessary).
@@ -533,6 +544,8 @@ GraphQL integration: https://www.onegraph.com/
 O'Reilly: http://shop.oreilly.com/product/0636920137269.do
 
 // TODO: add suspense
+
+// TODO: show different ways of adding the query: HOC or Component
 
 ## Bibliography
 https://onlineornot.com/blog/apollo-vs-relay-which-graphql-client-to-use-2019
