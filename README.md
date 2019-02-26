@@ -774,10 +774,181 @@ storiesOf("Post", module)
     });
 ```
 
+## Apollo 
+There are three different types of using Apollo inside the project:
+- Typing the Component APIs:
+```
+interface Data {
+  allPeople: {
+    people: Array<{ name: string }>;
+  };
+};
+
+interface Variables {
+  first: number;
+};
+
+class AllPeopleQuery extends Query<Data, Variables> {}
+```
+
+- Typing the Higher Order Components:
+```
+import React from "react";
+import gql from "graphql-tag";
+import { ChildDataProps, graphql } from "react-apollo";
+
+const HERO_QUERY = gql`
+  query GetCharacter($episode: Episode!) {
+    hero(episode: $episode) {
+      name
+      id
+      friends {
+        name
+        id
+        appearsIn
+      }
+    }
+  }
+`;
+
+type Hero = {
+  name: string;
+  id: string;
+  appearsIn: string[];
+  friends: Hero[];
+};
+
+type Response = {
+  hero: Hero;
+};
+
+type Variables = {
+  episode: string;
+};
+
+type ChildProps = ChildDataProps<{}, Response, Variables>;
+
+const withCharacter = graphql<{}, Response, Variables, ChildProps>(HERO_QUERY, {
+  options: () => ({
+    variables: { episode: "JEDI" }
+  })
+});
+
+export default withCharacter(({ data: { loading, hero, error } }) => {
+  if (loading) return <div>Loading</div>;
+  if (error) return <h1>ERROR</h1>;
+  return ...// actual component with data;
+});
+```
+
+- React Apollo Hooks:
+```
+import gql from 'graphql-tag';
+import { useQuery } from 'react-apollo-hooks';
+
+const GET_DOGS = gql`
+  {
+    dogs {
+      id
+      breed
+    }
+  }
+`;
+
+const Dogs = () => {
+  const { data, error, loading } = useQuery(GET_DOGS);
+  if (loading) {
+    return <div>Loading...</div>;
+  };
+  if (error) {
+    return <div>Error! {error.message}</div>;
+  };
+
+  return (
+    <ul>
+      {data.dogs.map(dog => (
+        <li key={dog.id}>{dog.breed}</li>
+      ))}
+    </ul>
+  );
+};
+```
+
+See more: https://github.com/trojanowski/react-apollo-hooks and https://www.apollographql.com/docs/react/recipes/static-typing.html
+
+### Installation
+In Apollo documentation, they recommend using Apollo [Boost](https://www.apollographql.com/docs/react/essentials/get-started.html) because it contains all the libraries that you need to create your client. We will follow this way as well, but just keep in mind that they can be installed separately.
+
+Run `npm install --save --save-exact apollo-boost react-apollo graphql` to install the dependencies.
+- [apollo-boost](https://www.npmjs.com/package/apollo-boost): Package containing everything you need to set up Apollo Client
+- [react-apollo](https://github.com/apollographql/react-apollo): View layer integration for React
+- [graphql](https://www.npmjs.com/package/graphql): Also parses your GraphQL queries
+
+### Create a client
+The only thing you need to get started is the endpoint for your GraphQL server. If you don’t pass in uri directly, it defaults to the /graphql endpoint on the same host your app is served from.
+
+Create a file called apollo-client.ts:
+```
+import ApolloClient from "apollo-boost";
+
+export const apolloClient = new ApolloClient({
+    uri: process.env.REACT_APP_API_ENDPOINT
+});
+```
+
+We have added a [ReactJS custom variable](https://facebook.github.io/create-react-app/docs/adding-custom-environment-variables). Therefore, we will need to create a new file in the root of our project called .env:
+```
+REACT_APP_API_ENDPOINT = ""
+```
+
+If we go to [Graphcool Console](https://console.graph.cool/), we select the new project we have created and we press the endpoints button, we will obtain the simple API which we need to replace in the .env file.
+
+To connect Apollo Client to React, you will need to use the ApolloProvider component exported from react-apollo. The ApolloProvider is similar to React’s context provider. Open your app component and add the following content:
+```
+import React, { Component } from "react";
+import { ApolloProvider } from "react-apollo";
+import { BrowserRouter, Route, Switch } from "react-router-dom";
+import { apolloClient } from "../../apollo-client";
+import { ErrorBoundary } from "../error-boundary";
+
+export class App extends Component {
+    render() {
+        return (
+            <BrowserRouter>
+                <ErrorBoundary>
+                    <ApolloProvider client={apolloClient}>
+                        <Switch>
+                            <Route exact path="/">
+                                <h2>Landing</h2>
+                            </Route>
+                            <Route path="/create">
+                                <h2>Create</h2>
+                            </Route>
+                            <Route path="/post/:id">
+                                <h2>Post profile</h2>
+                            </Route>
+                        </Switch>
+                    </ApolloProvider>
+                </ErrorBoundary>
+            </BrowserRouter>
+        );
+    }
+}
+```
+
+
+## List page
+// TODO:
+
+## Create page
+// TODO:
+
+## Post profile page
+// TODO:
 
 
 
-## Lazy Loading
+# Lazy Loading
 
 React.lazy() and Suspense
 https://reactjs.org/docs/code-splitting.html
@@ -786,10 +957,6 @@ https://reactjs.org/docs/code-splitting.html
 ## Other resources
 GraphQL integration: https://www.onegraph.com/
 O'Reilly: http://shop.oreilly.com/product/0636920137269.do
-
-// TODO: add suspense
-
-// TODO: show different ways of adding the query: HOC or Component
 
 ## Bibliography
 https://onlineornot.com/blog/apollo-vs-relay-which-graphql-client-to-use-2019
