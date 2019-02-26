@@ -521,17 +521,175 @@ fetch('/graphql', {
 ```
 
 ## Apollo Client Developer Tools
-https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm
+[Apollo Client Developer Tools](https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm) is a Chrome extension that facilitates debugging your GraphQL Apollo application. 
 
-1. A built-in GraphiQL console that allows you to make queries against your GraphQL server using your app's network interface directly (no configuration necessary).
+Some features that allows:
+- A built-in GraphiQL console that allows you to make queries against your GraphQL server using your app's network interface directly (no configuration necessary).
+- A query watcher that shows you which queries are being watched by the current page, when those queries are loading, and what variables those queries are using.
+- A mutation inspector that displays the mutations made to you apollo-client app data.
+- A cache inspector that displays your client-side Redux store in an Apollo-Client-friendly way. You can explore the state of the store through a tree-like interface, and search through the store for specific field keys and values.
 
-2. A query watcher that shows you which queries are being watched by the current page, when those queries are loading, and what variables those queries are using.
+# Application
+What we want to achieve with this application is showing a list of articles, going to the profile of one of them and be able to add new ones.
 
-3. A mutation inspector that displays the mutations made to you apollo-client app data.
+## Router
+There are two main in order to handle the routing: [react-router](https://github.com/ReactTraining/react-router/tree/master/packages/react-router) and [react-router-dom](https://github.com/ReactTraining/react-router/tree/master/packages/react-router-dom).
 
-4. A cache inspector that displays your client-side Redux store in an Apollo-Client-friendly way. You can explore the state of the store through a tree-like interface, and search through the store for specific field keys and values.
+react-router provides the core routing functionality for React Router, but you might not want to install it directly. If you are writing an application that will run in the browser, you should instead install react-router-dom. Similarly, if you are writing a React Native application, you should instead install react-router-native. Both of those will install react-router as a dependency.
 
-## Develop
+Run `npm install --save-dev --save-exact react-router-dom @types/react-router-dom` to install the library and the types.
+
+### Create an entry point
+We will place the app component inside the components folder and rename it to app.component.ts. The content will be:
+```
+import React, { Component } from "react";
+import { BrowserRouter, Route, Switch } from "react-router-dom";
+
+export class App extends Component {
+    render() {
+        return (
+            <BrowserRouter>
+                <Switch>
+                    <Route exact path="/">
+                        <h2>Landing</h2>
+                    </Route>
+                    <Route path="/create">
+                        <h2>Create</h2>
+                    </Route>
+                    <Route path="/post/:id">
+                        <h2>Post profile</h2>
+                    </Route>
+                </Switch>
+            </BrowserRouter>
+        );
+    }
+}
+```
+We will as well remove the App.css and the logo because we will not use it anymore.
+
+Our index.js will look like:
+```
+import React from "react";
+import ReactDOM from "react-dom";
+import "./index.css";
+import * as serviceWorker from "./serviceWorker";
+import { App } from "./components/app";
+
+ReactDOM.render(<App />, document.getElementById("root"));
+
+// If you want your app to work offline and load faster, you can change
+// unregister() to register() below. Note this comes with some pitfalls.
+// Learn more about service workers: http://bit.ly/CRA-PWA
+serviceWorker.unregister();
+```
+
+## Error boundary
+[Error Boundaries](https://reactjs.org/docs/error-boundaries.html) are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI instead of the component tree that crashed. Error boundaries catch errors during rendering, in lifecycle methods, and in constructors of the whole tree below them.
+
+They are ideal to catch all the errors and show them in an error tracking tool like [Sentry](https://sentry.io/welcome/).
+
+### Create an error boundary component
+Let's create a new component called error-boundary inside components folder. The content will look like this:
+```
+import React, { Component } from "react";
+import { State } from "./error-boundary.type";
+
+export class ErrorBoundary extends Component<{}, State> {
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true };
+    }
+
+    readonly state = { hasError: false };
+
+    componentDidCatch(error: Error, info: object) {
+        // You can also log the error to an error reporting service
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return <h1>Something went wrong.</h1>;
+        }
+
+        return this.props.children;
+    }
+}
+```
+
+error-boundary.type.ts will only contain the state interface:
+```
+export interface State {
+  hasError: boolean;
+}
+```
+
+A class component becomes an error boundary if it defines either (or both) of the lifecycle methods static getDerivedStateFromError() or componentDidCatch(). Use static getDerivedStateFromError() to render a fallback UI after an error has been thrown. Use componentDidCatch() to log error information.
+
+Error boundaries work like a JavaScript catch {} block, but for components. Note that error boundaries only catch errors in the components below them in the tree. 
+
+We will place it in the upper level of our application:
+```
+export class App extends Component {
+    render() {
+        return (
+            <BrowserRouter>
+                <ErrorBoundary>
+                    <Switch>
+                        <Route exact path="/">
+                            <LaunchError />
+                        </Route>
+                        <Route path="/create">
+                            <h2>Create</h2>
+                        </Route>
+                        <Route path="/post/:id">
+                            <h2>Post profile</h2>
+                        </Route>
+                    </Switch>
+                </ErrorBoundary>
+            </BrowserRouter>
+        );
+    }
+}
+```
+
+Just to know that it works as expected, we can fake an error in our application. We can create a new component and throw an error before rendering it:
+```
+import React, { Component } from "react";
+import { BrowserRouter, Route, Switch } from "react-router-dom";
+import { Error } from "tslint/lib/error";
+import { ErrorBoundary } from "../error-boundary";
+
+const LaunchError = () => {
+    throw new Error();
+    return <p>Lorem ipsum.</p>;
+};
+
+export class App extends Component {
+    render() {
+        return (
+            <BrowserRouter>
+                <ErrorBoundary>
+                    <Switch>
+                        <Route exact path="/">
+                            <LaunchError />
+                        </Route>
+                        <Route path="/create">
+                            <h2>Create</h2>
+                        </Route>
+                        <Route path="/post/:id">
+                            <h2>Post profile</h2>
+                        </Route>
+                    </Switch>
+                </ErrorBoundary>
+            </BrowserRouter>
+        );
+    }
+}
+```
+
+As we are in development mode, we will see a popup with the stacktrace of the error. Once the application uses the prod mode, this message won´t be shown.
+
+## Material UI
+[MaterialUI](https://material-ui.com/)
 
 Route:
 
