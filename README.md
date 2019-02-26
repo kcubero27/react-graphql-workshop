@@ -937,14 +937,265 @@ export class App extends Component {
 ```
 
 
-## List page
-// TODO:
+## Components
+### Query component
+As an example we will do the detail-post. Inside domains/graphql we will create a file called detail-post.query.ts. We will be filtering by the id of the post. Therefore, we will pass a variable to the query:
+```
+import gql from "graphql-tag";
 
-## Create page
-// TODO:
+export const DETAIL_POST_QUERY = gql`
+  query PostQuery($id: ID!) {
+    post: Post(id: $id) {
+      id
+      title
+      description
+      imageUrl
+      createdAt
+      updatedAt
+    }
+  }
+`;
+```
 
-## Post profile page
-// TODO:
+The next step would be create the HOC component:
+```
+import Query from "react-apollo/Query";
+import { Data, Variables } from "./detail-post.type";
+
+export class DetailPostQuery extends Query<Data, Variables> {}
+```
+
+with their types:
+```
+import { Post } from "../../domains/post";
+
+export interface Variables {
+  id: string;
+}
+
+export interface Data {
+  post: Post;
+}
+```
+
+We will create a new component called detail-post and use the DetailPostQuery component in order to get the data. 
+```
+import Grid from "@material-ui/core/Grid/Grid";
+import Typography from "@material-ui/core/Typography";
+import React, { Component } from "react";
+import { withRouter } from "react-router";
+import { DETAIL_POST_QUERY } from "../../domains/post/graphql/detail-post.query";
+import { DetailPostQuery } from "../../hocs/detail-post";
+import { Props } from "./detail-page.type";
+
+export class DetailPageBase extends Component<Props> {
+    render() {
+        return (
+            <DetailPostQuery query={DETAIL_POST_QUERY} variables={{ id: this.props.match.params.id }}>
+                {({ loading, error, data }) => {
+                    if (loading) {
+                        return <div>Loading (from {process.env.REACT_APP_GRAPHQL_ENDPOINT})</div>;
+                    }
+
+                    if (!data) {
+                        return null;
+                    }
+
+                    return (
+                        <Grid item xs={4}>
+                            <div>
+                                <img width="100%" src={data.post.imageUrl} alt="" />
+                            </div>
+
+                            <Typography component="h2" variant="h1" gutterBottom>
+                                {data.post.title}
+                            </Typography>
+
+                            <Typography variant="body1" gutterBottom>
+                                {data.post.description}
+                            </Typography>
+
+                            <Typography variant="caption" gutterBottom>
+                                {data.post.createdAt} · {data.post.updatedAt}
+                            </Typography>
+                        </Grid>
+                    );
+                }}
+            </DetailPostQuery>
+        );
+    }
+}
+
+export const DetailPage = withRouter(DetailPageBase);
+```
+
+Apollo works the following way:
+If we have enabled the cache it will go to the cache and look for the specific item. In case it's not there, it will execute a request. You can see this workflow in the Network tab inside Chrome or with the Apollo Client Developer Tools extension.
+
+Finally, just replace the component inside app component for the real component:
+```
+<Route path="/post/:id">
+  <DetailPage />
+</Route>
+```
+
+### Mutation component
+For mutations we will need exactly the same. A mutation passing the required variables to create a post entity:
+```
+import gql from "graphql-tag";
+
+export const CREATE_POST_MUTATION = gql`
+  mutation createPost(
+    $description: String!
+    $title: String!
+    $imageUrl: String!
+  ) {
+    createPost(description: $description, title: $title, imageUrl: $imageUrl) {
+      id
+      title
+      description
+      imageUrl
+      createdAt
+      updatedAt
+    }
+  }
+`;
+```
+
+A HOC component with the types:
+```
+import Mutation from "react-apollo/Mutation";
+import { Data, Variables } from "./create-post.type";
+
+export class CreatePostMutation extends Mutation<Data, Variables> {}
+```
+
+```
+import { Post } from "../../domains/post";
+
+export interface Variables {
+  title: string;
+  description: string;
+  imageUls: string;
+}
+
+export interface Data {
+  createPost: Post;
+}
+```
+
+And finally a component where we will use the HOC:
+```
+import Button from "@material-ui/core/Button/Button";
+import Grid from "@material-ui/core/Grid/Grid";
+import TextField from "@material-ui/core/TextField/TextField";
+import React, { ChangeEvent, Component, FormEvent } from "react";
+import { Redirect } from "react-router";
+import { Post } from "../../domains/post";
+import { ALL_POSTS_QUERY } from "../../domains/post/graphql";
+import { CREATE_POST_MUTATION } from "../../domains/post/graphql/create-post.mutation";
+import { CreatePostMutation } from "../../hocs/create-post";
+import { KeyState, State } from "./create-page.type";
+
+export class CreatePage extends Component<{}, State> {
+    state: Readonly<State> = {
+        title: "",
+        description: "",
+        imageUrl: ""
+    };
+
+    handleSubmit = (e: FormEvent, createPost: any) => {
+        e.preventDefault();
+        createPost({ variables: this.state });
+    };
+
+    handleChange = (field: string) => (event: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>) => {
+        this.setState({ [field]: event.target.value } as KeyState);
+    };
+
+    render() {
+        return (
+            <CreatePostMutation
+                mutation={CREATE_POST_MUTATION}
+                update={(cache, { data, errors }) => {
+                    if (data && (!errors || (errors && !errors.length))) {
+                        try {
+                            const cacheData = cache.readQuery<{ allPosts: Post[] }>({
+                                query: ALL_POSTS_QUERY
+                            });
+
+                            const allPosts = cacheData
+                                ? cacheData.allPosts.concat([data.createPost])
+                                : [data.createPost];
+
+                            cache.writeQuery({
+                                query: ALL_POSTS_QUERY,
+                                data: {
+                                    allPosts
+                                }
+                            });
+                        } catch (e) {
+                            // As cache.readQuery throws an exception when is empty, we need to handle this in the view
+                        }
+                    }
+                }}
+            >
+                {(createPost, { data }) => {
+                    if (data) {
+                        return <Redirect to="/" />;
+                    }
+
+                    return (
+                        <Grid item xs={4}>
+                            <form onSubmit={e => this.handleSubmit(e, createPost)}>
+                                <div>
+                                    <TextField
+                                        id="standard-name"
+                                        label="Title"
+                                        value={this.state.title}
+                                        onChange={this.handleChange("title")}
+                                        margin="normal"
+                                    />
+                                </div>
+
+                                <div>
+                                    <TextField
+                                        id="standard-name"
+                                        label="Description"
+                                        value={this.state.description}
+                                        onChange={this.handleChange("description")}
+                                        margin="normal"
+                                        multiline={true}
+                                    />
+                                </div>
+
+                                <div>
+                                    <TextField
+                                        id="standard-name"
+                                        label="Image URL"
+                                        value={this.state.imageUrl}
+                                        onChange={this.handleChange("imageUrl")}
+                                        margin="normal"
+                                    />
+                                </div>
+
+                                <br />
+                                <Button type="submit" variant="contained">
+                                    Save
+                                </Button>
+                            </form>
+                        </Grid>
+                    );
+                }}
+            </CreatePostMutation>
+        );
+    }
+}
+```
+
+Mutations don't work the same way as queries. Mutations are only triggered when the function is invoqued. Another thing we should notice is that as we are using the cache from Apollo, our all-post query will be cached as well. In order to add this new post to the cached query, we should override the cache itself; this is why we are using `cache.writeQuery`.
+
+There is a problem related to Apollo cache. readQuery crashes if there is nothing in the store. We need to manage this with a try catch until they fix it: https://github.com/apollographql/apollo-feature-requests/issues/1
 
 
 
