@@ -1,12 +1,14 @@
 import { Grid } from "@material-ui/core";
-import React, { Component } from "react";
+import React, { Component, lazy, Suspense } from "react";
 import { ApolloProvider } from "react-apollo";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import { apolloClient } from "../../apollo-client";
-import { CreatePage } from "../../views/create-page";
-import { DetailPage } from "../../views/detail-page";
 import { ListPage } from "../../views/list-page";
 import { ErrorBoundary } from "../error-boundary";
+
+const CreatePageLazy = lazy(() => import("../../views/create-page").then(module => ({ default: module.CreatePage })));
+
+const DetailPageLazy = lazy(() => import("../../views/detail-page").then(module => ({ default: module.DetailPage })));
 
 export class App extends Component {
     render() {
@@ -15,17 +17,19 @@ export class App extends Component {
                 <ErrorBoundary>
                     <ApolloProvider client={apolloClient}>
                         <Grid container justify="center" alignItems="center" direction="column">
-                            <Switch>
-                                <Route exact path="/">
-                                    <ListPage />
-                                </Route>
-                                <Route path="/create">
-                                    <CreatePage />
-                                </Route>
-                                <Route path="/post/:id">
-                                    <DetailPage />
-                                </Route>
-                            </Switch>
+                            <Suspense fallback={<div>Loading...</div>}>
+                                <Switch>
+                                    <Route exact path="/">
+                                        <ListPage />
+                                    </Route>
+                                    <Route path="/create">
+                                        <CreatePageLazy />
+                                    </Route>
+                                    <Route path="/post/:id">
+                                        <DetailPageLazy />
+                                    </Route>
+                                </Switch>
+                            </Suspense>
                         </Grid>
                     </ApolloProvider>
                 </ErrorBoundary>
