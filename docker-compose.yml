@@ -4,6 +4,7 @@ services:
     container_name: reactql
     build: .
     ports:
-      - 4200:4200
+      - 3000:3000
+      - 6006:6006
     volumes:
       - ./:/usr/src/app
